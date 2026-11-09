@@ -1,23 +1,24 @@
 import os
 
 import psycopg2
-from psycopg2 import RealDictCursor
-from flask import Flask, jsonify, request, render_template, redirect, url_for
+from psycopg2.extras import RealDictCursor
+from flask import Flask, jsonify, request, render_template
 
 app = Flask(__name__)
 
 
 def get_conn():
     return psycopg2.connect(
-        host=os.environ("DB_HOST"),
+        host=os.environ["DB_HOST"],
         port=os.environ.get("DB_PORT", "5432"),
-        dbname=os.environ("DB_NAME"),
-        user=os.environ("DB_USER"),
-        password=os.environ("DB_PASSWORD"),
+        dbname=os.environ["DB_NAME"],
+        user=os.environ["DB_USER"],
+        password=os.environ["DB_PASSWORD"],
     )
 
 
-  conn = get_conn()
+def run_query(sql, params=None, fetch=False):
+    conn = get_conn()
     try:
         with conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(sql, params)
@@ -84,7 +85,7 @@ def add_item():
         for v in (quantity, min_stock)
     )
     if not name or len(name) > 100 or not valid_numbers:
-        return jsonify 400
+        return jsonify(error="name wajib diisi; quantity dan min_stock harus bilangan bulat >= 0"), 400
 
     rows = run_query(
         "INSERT INTO items (name, quantity, min_stock, unit) "
