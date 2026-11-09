@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WarungStok</title>
+</head>
+<body>
+  <h1>WarungStok</h1>
+  <form id="form">
+    <input name="name" placeholder="Nama barang" required>
+    <input name="quantity" type="number" min="0" placeholder="Stok" required>
+    <input name="min_stock" type="number" min="0" placeholder="Stok minimum" required>
+    <input name="unit" placeholder="Satuan (kg, pcs)">
+    <button type="submit">Tambah</button>
+  </form>
+  <p id="msg"></p>
+
+  <h2>Stok hampir habis</h2>
+  <ul id="low"></ul>
+
+  <script>
+    async function loadLow() {
+      const res = await fetch("/items/low");
+      const items = await res.json();
+      const ul = document.getElementById("low");
+      ul.replaceChildren();
+      if (items.length === 0) {
+        const li = document.createElement("li");
+        li.textContent = "Semua stok aman";
+        ul.appendChild(li);
+        return;
+      }
+      for (const i of items) {
+        const li = document.createElement("li");
+        li.textContent = `${i.name}: ${i.quantity} ${i.unit} (minimum ${i.min_stock})`;
+        ul.appendChild(li);
+      }
+    }
+
+    document.getElementById("form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const body = {
+        name: f.get("name"),
+        quantity: parseInt(f.get("quantity"), 10),
+        min_stock: parseInt(f.get("min_stock"), 10),
+        unit: f.get("unit") || "pcs",
+      };
+      const res = await fetch("/items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      document.getElementById("msg").textContent =
+        res.status === 201 ? "Berhasil ditambahkan (201)" : "Gagal (" + res.status + ")";
+      if (res.status === 201) e.target.reset();
+      loadLow();
+    });
+
+    loadLow();
+  </script>
+</body>
+</html>
