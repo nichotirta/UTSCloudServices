@@ -19,15 +19,18 @@
   <h2>Stok hampir habis</h2>
   <ul id="low"></ul>
 
+  <h2>Semua stok</h2>
+  <ul id="all"></ul>
+
   <script>
-    async function loadLow() {
-      const res = await fetch("/items/low");
+    async function loadList(url, listId, emptyText) {
+      const res = await fetch(url);
       const items = await res.json();
-      const ul = document.getElementById("low");
+      const ul = document.getElementById(listId);
       ul.replaceChildren();
       if (items.length === 0) {
         const li = document.createElement("li");
-        li.textContent = "Semua stok aman";
+        li.textContent = emptyText;
         ul.appendChild(li);
         return;
       }
@@ -36,6 +39,11 @@
         li.textContent = `${i.name}: ${i.quantity} ${i.unit} (minimum ${i.min_stock})`;
         ul.appendChild(li);
       }
+    }
+
+    function loadAll() {
+      loadList("/items/low", "low", "Semua stok aman");
+      loadList("/items", "all", "Belum ada barang");
     }
 
     document.getElementById("form").addEventListener("submit", async (e) => {
@@ -55,10 +63,10 @@
       document.getElementById("msg").textContent =
         res.status === 201 ? "Berhasil ditambahkan (201)" : "Gagal (" + res.status + ")";
       if (res.status === 201) e.target.reset();
-      loadLow();
+      loadAll();
     });
 
-    loadLow();
+    loadAll();
   </script>
 </body>
 </html>
